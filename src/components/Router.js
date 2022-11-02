@@ -22,7 +22,6 @@ export default ({isLoggedIn}) => {
                 <Route exact path="/profile">
                     <Profile />
                 </Route>
-                <Redirect from="*" to="/" />
                 </> ): ( <Route exact path="/"><Auth /></Route> )}
             </Switch>
         </Router>
