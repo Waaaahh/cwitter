@@ -1,6 +1,7 @@
 import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, orderBy, query } from "firebase/firestore";
 import { fireStore } from "myBase";
 import React, {useEffect, useState} from "react";
+import Cweet from '../components/Cweet'
 const Home =({ userObj }) => {
     console.log(userObj)
     const [cweet, setCweet] = useState("");
@@ -11,7 +12,7 @@ const Home =({ userObj }) => {
             const cweetDocument = {
                 ...document.data(),
                 id: document.id,
-                createdId: userObj.uid,
+                creatorId: userObj.uid,
             }
             setCweets((prev) => [cweetDocument, ...prev])
         })
@@ -35,7 +36,7 @@ const Home =({ userObj }) => {
         {
             text: cweet,
             createdAt: Date.now(),
-            createdId: userObj.uid,
+            creatorId: userObj.uid,
         });
         setCweet("");
     }
@@ -57,10 +58,9 @@ const Home =({ userObj }) => {
                 <input type="submit" value="cwit"  />
             </form>
             <div>
-                { cweets.map((cweet) => (
-                    <div key={cweet.id}>
-                        <h4>{cweet.text}</h4>
-                    </div>
+                { cweets.map((cweetObj) => (
+                        <Cweet key={cweetObj.id} cweetObj={cweetObj} isOwner={cweetObj.creatorId === userObj.uid}/>
+                    // <cweet key={cweet.id} cweetObj={cweet} isOwner={cweet.creatorId === userObj.uid}></cweet>
                 )) }
             </div>
         </div>
