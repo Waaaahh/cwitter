@@ -4,7 +4,7 @@ import React, {useEffect, useState} from "react";
 const Home =({ userObj }) => {
     console.log(userObj)
     const [cweet, setCweet] = useState("");
-    const [cweets, setCweets] = useState("");
+    const [cweets, setCweets] = useState([]);
     const getCweet = async () => {
         const cweetData = await getDocs(query(collection(fireStore, "cweets")))
         cweetData.forEach((document) => {
@@ -18,12 +18,12 @@ const Home =({ userObj }) => {
     }
     useEffect(() => {
         getCweet();
-        onSnapshot(query(collection(fireStore, "cweets"), orderBy('createdAt')), (querySnapshot) => {
+        onSnapshot(query(collection(fireStore, "cweets"), orderBy('createdAt', 'desc')), (querySnapshot) => {
             const cweetArr = querySnapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data(),
-            }))
-            setCweets(cweetArr)
+            }));
+            setCweets(cweetArr);
         } )
         
     }, [])
@@ -48,13 +48,21 @@ const Home =({ userObj }) => {
         } = event;
         setCweet(value)
     }
-    console.log(cweets)
+    console.log("cweets")
+    console.log("cwee"+cweets)
     return (
-        <div>
+        <div className="container">
             <form onSubmit={onSubmit}>
                 <input value={cweet} type="text" placeholder="What's on your mind?" maxLength={120} onChange={onChange}/>
                 <input type="submit" value="cwit"  />
             </form>
+            <div>
+                { cweets.map((cweet) => (
+                    <div key={cweet.id}>
+                        <h4>{cweet.text}</h4>
+                    </div>
+                )) }
+            </div>
         </div>
     )
 }
