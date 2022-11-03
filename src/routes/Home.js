@@ -1,7 +1,8 @@
-import { addDoc, collection, doc, getDoc, getDocs, query } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, orderBy, query } from "firebase/firestore";
 import { fireStore } from "myBase";
 import React, {useEffect, useState} from "react";
-const Home =() => {
+const Home =({ userObj }) => {
+    console.log(userObj)
     const [cweet, setCweet] = useState("");
     const [cweets, setCweets] = useState("");
     const getCweet = async () => {
@@ -10,12 +11,21 @@ const Home =() => {
             const cweetDocument = {
                 ...document.data(),
                 id: document.id,
+                createdId: userObj.uid,
             }
             setCweets((prev) => [cweetDocument, ...prev])
         })
     }
     useEffect(() => {
-        getCweet()
+        getCweet();
+        onSnapshot(query(collection(fireStore, "cweets"), orderBy('createdAt')), (querySnapshot) => {
+            const cweetArr = querySnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }))
+            setCweets(cweetArr)
+        } )
+        
     }, [])
     const onSubmit = async (event) => {
         console.log(event)
@@ -23,8 +33,9 @@ const Home =() => {
         const docRef = await addDoc(
         collection(fireStore,"cweets"),
         {
-            cweet,
-            createdAt: Date.now()
+            text: cweet,
+            createdAt: Date.now(),
+            createdId: userObj.uid,
         });
         setCweet("");
     }
