@@ -2,13 +2,13 @@ import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, orderBy, query } 
 import { fireStore } from "myBase";
 import React, {useEffect, useState} from "react";
 import Cweet from '../components/Cweet'
-import { getStorage, ref, uploadString } from "firebase/storage";
+import { getDownloadURL, getStorage, ref, uploadString } from "firebase/storage";
 import { v4 } from "uuid";
 const Home =({ userObj }) => {
     console.log(userObj)
     const [cweet, setCweet] = useState("");
     const [cweets, setCweets] = useState([]);
-    const [attachment, setAttachment] = useState();
+    const [attachment, setAttachment] = useState("");
     const getCweet = async () => {
         const cweetData = await getDocs(query(collection(fireStore, "cweets")))
         cweetData.forEach((document) => {
@@ -16,6 +16,7 @@ const Home =({ userObj }) => {
                 ...document.data(),
                 id: document.id,
                 creatorId: userObj.uid,
+                attachmentUrl : document.attachmentUrl,
             }
             setCweets((prev) => [cweetDocument, ...prev])
         })
@@ -33,25 +34,37 @@ const Home =({ userObj }) => {
     }, [])
     const onSubmit = async (event) => {
         event.preventDefault();
-        // const docRef = await addDoc(
-        /* collection(fireStore,"cweets"),
-        {
+        
+        let attachmentUrl = ""
+        if(attachment !== "") {
+            const storage = getStorage();
+            const imageRef = ref(storage, `${userObj.uid}/${v4()}`);
+            const response = await uploadString(imageRef, attachment, "data_url").then(async (snapshot) => {
+                console.log(snapshot)
+                attachmentUrl = await getDownloadURL(snapshot.ref)
+            });            
+        }
+
+        const cweetObj = {
             text: cweet,
             createdAt: Date.now(),
             creatorId: userObj.uid,
-        });
-        setCweet(""); */
-        const storage = getStorage();
-        const imageRef = ref(storage, `${userObj.uid}/${v4()}`);
+            attachmentUrl,
+        }
 
-        uploadString(imageRef, attachment, "data_url").then((snapshot) => {
-            console.log("UPloaded base64 encoded string")
-        })
-        
+        console.log(cweetObj)
+
+        const docRef = await addDoc(
+        collection(fireStore,"cweets"),
+        cweetObj);
+
+        setCweet("");
+        setAttachment("");
+
+        document.getElementById("cweetImage").value = ""
 
     }
     const onChange = (event) => {
-        console.log(event)
         const {
             target: {
                 value
@@ -73,14 +86,12 @@ const Home =({ userObj }) => {
         }
         reader.readAsDataURL(theFile);
     }
-    const onClearAttachment = () => setAttachment(null);
-    console.log("cweets")
-    console.log("cwee"+cweets)
+    const onClearAttachment = () => setAttachment("");
     return (
         <div className="container">
             <form onSubmit={onSubmit}>
                 <input value={cweet} type="text" placeholder="What's on your mind?" maxLength={120} onChange={onChange}/>
-                <input type="file" accept="image/*" onChange={onFileChange} />
+                <input type="file" accept="image/*" onChange={onFileChange} id="cweetImage"/>
                 <input type="submit" value="cwit"  />
                 {attachment && 
                 (
