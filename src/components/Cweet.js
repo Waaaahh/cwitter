@@ -2,6 +2,7 @@ import { deleteDoc, deleteField, doc, query, updateDoc } from 'firebase/firestor
 import { fireStore } from 'myBase';
 import { useState } from 'react'
 import React from 'react'
+import { deleteObject, ref } from 'firebase/storage';
 
 const Cweet = ({cweetObj, isOwner}) => {
     const [newCweet, setNewCweet] = useState(cweetObj.text)
@@ -11,7 +12,9 @@ const Cweet = ({cweetObj, isOwner}) => {
         const ok = window.confirm("Are you sure want to delete this cweet");
         const doccument = doc(fireStore, `cweets/${cweetObj.id}`)
         if(ok) {
-            await deleteDoc(doccument);          
+            await deleteDoc(doccument);
+            const fileRef = await ref(fireStore, cweetObj.attachmentUrl);
+            await deleteObject(fileRef);
 
         }
     };
